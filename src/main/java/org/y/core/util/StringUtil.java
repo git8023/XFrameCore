@@ -1,6 +1,5 @@
 package org.y.core.util;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,11 +169,11 @@ public final class StringUtil extends StringUtils {
      * 获取 classpath 路径
      *
      * @return String classpath 路径, 总是以"/"结尾
-     * @throws Exception
+     * @throws Exception 获取资源失败时抛出
      */
     public static String getClassPath() throws Exception {
         URL resource = Thread.currentThread().getContextClassLoader().getResource("");
-        String basePath = resource.toURI().getPath();
+        String basePath = Objects.requireNonNull(resource).toURI().getPath();
         if (isWindowsSys()) {
             basePath = basePath.substring(1);
         }
@@ -289,7 +288,7 @@ public final class StringUtil extends StringUtils {
      * @return boolean true-是纯数值字符串(或整数, 或小数, 或指数), false-不是纯数值字符串(或null值, 或0长度值, 或全空白字符值)
      */
     public static boolean isNumber(String target) {
-        final Pattern pattern = Pattern.compile("^[+-]?((\\d{0,}(\\.\\d*)?[f|F|d|D]?)|(\\d+[l|L]?))$");
+        final Pattern pattern = Pattern.compile("^[+-]?((\\d*(\\.\\d*)?[fFdD]?)|(\\d+[l|L]?))$");
         return !isEmpty(target, true) && pattern.matcher(target).matches();
     }
 
@@ -321,8 +320,8 @@ public final class StringUtil extends StringUtils {
     public static List<Integer> listStringToInteger(List<String> str) {
         if (null != str && str.size() > 0) {
             List<Integer> listInt = new ArrayList<Integer>();
-            for (int i = 0; i < str.size(); i++) {
-                listInt.add(Integer.parseInt(str.get(i)));
+            for (String s : str) {
+                listInt.add(Integer.parseInt(s));
             }
             return listInt;
         }
@@ -382,6 +381,10 @@ public final class StringUtil extends StringUtils {
         return sb.toString();
     }
 
+    /**
+     * @see CollectionUtil#join(Iterable, String)
+     */
+    @Deprecated
     public static String toString(Collection<?> c, String separator) {
         StringBuilder buf = new StringBuilder();
         for (Object obj : c) if (null != obj) buf.append(separator).append(obj);
@@ -428,8 +431,7 @@ public final class StringUtil extends StringUtils {
             return false;
         }
 
-        for (int i = 0; i < targets.length; i++) {
-            Object target = targets[i];
+        for (Object target : targets) {
             if (isEmpty(target, isTrim)) {
                 return false;
             }
@@ -446,7 +448,7 @@ public final class StringUtil extends StringUtils {
      */
     public static String convertToUnixPath(String targetPath) {
         return (isEmpty(targetPath, true)
-                ? null
+                ? EMPTY_STRING
                 : targetPath.replace(SEPARATOR_OF_WINDOWS_FILE, SEPARATOR_OF_UNIX_FILE));
     }
 
@@ -459,9 +461,7 @@ public final class StringUtil extends StringUtils {
     public static String getFileName(String filePath) {
         if (isNotEmpty(filePath, true)) {
             filePath = convertToUnixPath(filePath);
-            String fileName =
-                    filePath.substring(filePath.lastIndexOf(StringUtil.SEPARATOR_OF_UNIX_FILE) + 1);
-            return fileName;
+            return filePath.substring(filePath.lastIndexOf(StringUtil.SEPARATOR_OF_UNIX_FILE) + 1);
         } else {
             return null;
         }
@@ -612,18 +612,14 @@ public final class StringUtil extends StringUtils {
      * @return 序列化字符串
      */
     public static <T extends Serializable> String serialize(T obj) {
-        ByteArrayOutputStream byteArrayOutputStream = null;
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            byteArrayOutputStream = new ByteArrayOutputStream();
-            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        try (
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        ) {
             objectOutputStream.writeObject(obj);
             return byteArrayOutputStream.toString("ISO-8859-1");
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(objectOutputStream);
-            IOUtils.closeQuietly(byteArrayOutputStream);
         }
     }
 
@@ -637,17 +633,13 @@ public final class StringUtil extends StringUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Serializable> T serializeToObject(String str) {
-        ByteArrayInputStream byteArrayInputStream = null;
-        ObjectInputStream objectInputStream = null;
-        try {
-            byteArrayInputStream = new ByteArrayInputStream(str.getBytes("ISO-8859-1"));
-            objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        try (
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(str.getBytes(StandardCharsets.ISO_8859_1));
+                ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)
+        ) {
             return (T) objectInputStream.readObject();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(objectInputStream);
-            IOUtils.closeQuietly(byteArrayInputStream);
         }
     }
 
