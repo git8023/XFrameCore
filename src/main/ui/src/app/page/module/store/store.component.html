@@ -1,0 +1,158 @@
+<nz-spin [nzSpinning]="boxLoading" [nzDelay]="500">
+  <div>
+    <div class="form-condition">
+      <form nz-form [formGroup]="form">
+        <div nz-row [nzGutter]="24">
+          <nz-form-item nz-col [nzSpan]="6">
+            <nz-form-label [nzSm]="6" [nzXs]="24">模块名称</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input formControlName="name" placeholder="支持模糊查询"/>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item nz-col [nzSpan]="6">
+            <nz-form-label [nzSm]="6" [nzXs]="24">作者</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input formControlName="author" placeholder="支持模糊查询"/>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item nz-col [nzSpan]="6">
+            <nz-form-label [nzSm]="6" [nzXs]="24">状态</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <nz-select nzShowSearch nzPlaceHolder="选择状态" formControlName="status">
+                <nz-option nzLabel="全部" nzValue=""></nz-option>
+                <nz-option nzLabel="运行中" nzValue="RUNNING"></nz-option>
+                <nz-option nzLabel="已停止" nzValue="STOP"></nz-option>
+                <nz-option nzLabel="启动失败" nzValue="START_FAILED"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item nz-col [nzSpan]="6" class="btn-group_right_1rem">
+            <button nz-button nzType="primary" (click)="updateCondition()"><i nz-icon nzType="search"></i> 搜索</button>
+            <button nz-button nzType="danger" (click)="form.reset()"><i nz-icon nzType="redo"></i> 清空</button>
+          </nz-form-item>
+        </div>
+      </form>
+    </div>
+
+    <nz-table #Table [nzData]="pageData"
+              [nzShowPagination]="true"
+              [nzShowSizeChanger]="true"
+              [nzFrontPagination]="false"
+              [nzTotal]="rowTotal"
+              [nzPageIndex]="pageIndex"
+              [nzPageSizeOptions]="[10, 20, 50]"
+              [nzLoading]="loading"
+              [nzPageSize]="pageSize">
+      <thead>
+      <tr>
+        <th
+          nzShowSort
+          [(nzSort)]="sortCondition.name"
+          (nzSortChange)="sort('name', $event)">
+          模块名称
+        </th>
+        <th
+          nzShowSort
+          [(nzSort)]="sortCondition.webPort"
+          (nzSortChange)="sort('webPort', $event)">
+          Web服务端口
+        </th>
+        <th nzShowSort [(nzSort)]="sortCondition.author"
+            (nzSortChange)="sort('author', $event)">
+          作者
+        </th>
+        <th
+          nzShowSort
+          [(nzSort)]="sortCondition.uploadDate"
+          (nzSortChange)="sort('uploadDate', $event)">
+          上传时间
+        </th>
+        <th
+          nzShowSort
+          [(nzSort)]="sortCondition.status"
+          (nzSortChange)="sort('status', $event)">
+          状态
+        </th>
+        <th
+          nzShowSort
+          [(nzSort)]="sortCondition.type"
+          (nzSortChange)="sort('status', $event)">
+          类型
+        </th>
+        <th>描述</th>
+        <th>操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let data of Table.data">
+        <td>
+          <img *ngIf="data.iconInfo" src="/upload/img/{{data.iconInfo.id}}" class="app-icon">
+          {{ data.name }}
+        </td>
+        <td>{{ data.webPort }}</td>
+        <td>{{ data.author }}</td>
+        <td>{{ data.uploadDate }}</td>
+        <td>
+          <span class="module-status {{data.status}}">
+            <i nz-icon nzType="{{ data.status|jsonIndex:{RUNNING: 'wifi', STOP: 'poweroff', START_FAILED: 'warning'} }}"
+               nzTheme="outline"></i>
+            {{ data.status|jsonIndex:{RUNNING: '运行中', STOP: '已停止', START_FAILED: '失败'} }}
+          </span>
+        </td>
+        <td>
+          <span class="module-type {{data.type}}">
+            <i nz-icon nzType="{{ data.type|jsonIndex:{SERVICE: 'usb', APPLICATION: 'laptop'} }}" nzTheme="outline"></i>
+            {{ data.type|jsonIndex:{SERVICE: '系统服务', APPLICATION: '应用程序'} }}
+          </span>
+        </td>
+        <td>{{ data.note }}</td>
+        <td class="btn-group_right_1rem" style="width:400px">
+
+          <button *ngIf="'RUNNING'!==data.status" nz-button nzType="primary"
+                  (click)="changeStatus(data, 'RUNNING')">
+            <i nz-icon nzType="caret-right" nzTheme="outline"></i>启动
+          </button>
+
+          <button *ngIf="'RUNNING'===data.status" nz-button nzType="danger"
+                  (click)="changeStatus(data, 'STOP')">
+            <i nz-icon nzType="login" nzTheme="outline"></i>停止
+          </button>
+
+          <button *ngIf="'RUNNING'===data.status" nz-button nzType="info" class="btn-dark"
+                  (click)="showLogModal(data)">
+            <i nz-icon nzType="code" nzTheme="outline"></i>日志
+          </button>
+
+          <button nz-button nzType="info" class="btn-dark" (click)="downloadLog(data)">
+            <i nz-icon nzType="cloud-download" nzTheme="outline"></i>日志
+          </button>
+
+          <button *ngIf="'RUNNING'!==data.status" nz-button nzType="danger"
+                  (click)="delModule(data)">
+            <i nz-icon nzType="code" nzTheme="outline"></i>删除
+          </button>
+
+          <button *ngIf="'RUNNING'!==data.status" nz-button nzType="info" class="btn-warning"
+                  (click)="editModule(data)">
+            <i nz-icon nzType="edit" nzTheme="outline"></i>编辑
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </nz-table>
+  </div>
+</nz-spin>
+
+<nz-drawer
+  [nzClosable]="true"
+  [nzMaskClosable]="true"
+  [nzVisible]="logModalVisible"
+  nzPlacement="bottom"
+  [nzHeight]="255"
+  (nzOnClose)="logModalVisible=false"
+  nzTitle="{{module.name}} - 运行日志(最后100行)">
+  <div class="log-container">
+    <div class="log" *ngFor="let log of logs">{{log}}</div>
+    <div class="not-data" *ngIf="0 == logs.length"></div>
+  </div>
+</nz-drawer>

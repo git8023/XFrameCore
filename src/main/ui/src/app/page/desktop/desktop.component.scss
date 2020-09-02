@@ -1,0 +1,141 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  background: url("/assets/desktop-bg.jpg");
+  user-select: none;
+  overflow: hidden;
+
+  .icons {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .icon {
+      display: inline-block;
+      padding: 0.5rem;
+      margin: 1rem;
+      text-align: center;
+      border-radius: .5rem;
+      cursor: pointer;
+      transition: background .3s;
+      width: 5rem;
+      color: #fff;
+      text-shadow: 1px 1px 1px #333;
+
+      &.active {
+        background: rgba(0, 0, 0, .1);
+      }
+
+      &:hover {
+        background: rgba(0, 0, 0, .2);
+      }
+
+      .text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+  }
+
+  .task-box {
+    //position: fixed;
+    width: 100%;
+    bottom: 0;
+    padding: 0;
+    text-align: center;
+    background: transparent;
+    //z-index: 999999;
+
+    .tasks {
+      background: rgba(0, 0, 0, .1);
+      padding: 0.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s;
+
+      &:hover {
+        background: rgba(0, 0, 0, .2);
+      }
+
+      .task {
+        display: inline-block;
+        margin: .25rem;
+        cursor: pointer;
+
+        > * {
+          position: relative;
+        }
+
+        img {
+          width: 2rem;
+          height: 2rem;
+          //transition: width .3s, height .3s;
+        }
+
+        //&:hover {
+        //transform: scale(1.05);
+        //img {
+        //  width: 2.5rem;
+        //  height: 2.5rem;
+        //}
+        //}
+
+        &.settings {
+          font-size: 2rem;
+          transition: font-size .3s;
+
+          //&:hover {
+          //font-size: 2.5rem;
+          //}
+        }
+      }
+
+    }
+
+  }
+}
+
+.locker-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+
+  .mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background: rgba(0, 0, 0, .2);
+  }
+
+  .form {
+    min-width: 25%;
+    background: rgba(0, 0, 0, .85);
+    //padding: 2rem;
+
+    [nz-form] {
+      padding: 2rem;
+    }
+
+    .resend-code {
+      position: absolute;
+      right: 0;
+      border-radius: 0 3px 3px 0;
+    }
+  }
+
+  nz-form-item:last-child {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,39 @@
+<div class="window status-{{status}} flex-v" #windowBox [style.zIndex]="zIndex">
+  <div class="head flex-h flex-center" (dblclick)="restoreOr('MAX')" #header (click)="toTopZIndex()">
+    <div class="title flex-1 flex-h flex-center" (mousedown)="movingReady($event)">
+      <img [src]="iconSrc" class="icon">
+      <span class="text flex-1">
+        {{data.name}}
+        <span class="subhead" *ngIf="subhead">
+          <nz-divider nzType="vertical"></nz-divider>
+          {{subhead}}
+        </span>
+      </span>
+    </div>
+    <div>
+      <i nz-icon nzType="sync" nzTheme="outline" (click)="changeStatus('RELOAD')"
+         nzTooltipTitle="重新加载" nzTooltipPlacement="topCenter" nz-tooltip
+         class="option"></i>
+
+      <i nz-icon nzType="down-square" nzTheme="outline" (click)="changeStatus('MIN')"
+         nzTooltipTitle="最小化" nzTooltipPlacement="topCenter" nz-tooltip
+         class="option"></i>
+
+      <i nz-icon nzType="fullscreen" nzTheme="outline" (click)="changeStatus('MAX')"
+         nzTooltipTitle="最大化" nzTooltipPlacement="topCenter" nz-tooltip
+         *ngIf="status=='RESTORE'" class="option"></i>
+
+      <i nz-icon nzType="fullscreen-exit" nzTheme="outline" (click)="changeStatus('RESTORE')"
+         nzTooltipTitle="还原" nzTooltipPlacement="topCenter" nz-tooltip
+         *ngIf="status=='MAX'" class="option"></i>
+
+      <i nz-icon nzType="close" nzTheme="outline" (click)="changeStatus('CLOSED')"
+         nzTooltipTitle="关闭" nzTooltipPlacement="topCenter" nz-tooltip
+         class="option option-close"></i>
+    </div>
+  </div>
+  <div class="flex-1 relative">
+    <iframe [src]="appIndexUrl" class="body full-parent absolute overflow-auto" [name]="windowName"></iframe>
+    <div [style.display]="moving?'block':'none'" class="moving-mask" [style.zIndex]="zIndex"></div>
+  </div>
+</div>

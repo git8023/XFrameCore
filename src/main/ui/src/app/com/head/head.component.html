@@ -1,0 +1,23 @@
+<div id="body">
+  <nz-header>
+    <ul nz-menu nzTheme="dark" nzMode="horizontal">
+      <li nz-menu-item (click)="navPath({name:'首页'})">首页</li>
+      <li nz-submenu nzTitle="模块" nzIcon="down">
+        <ul>
+          <li (click)="navPath({name:'模块'},{name:'模块列表', path:'dashboard/module/store'})"
+              nz-menu-item>模块列表
+          </li>
+          <li (click)="navPath({name:'模块'}, {name:'上传模块', path:'dashboard/module/upload'})"
+              nz-menu-item>上传模块
+          </li>
+        </ul>
+      </li>
+      <li nz-menu-item (click)="navPath({name:'XFrame桌面', path:'desktop'})">桌面</li>
+    </ul>
+  </nz-header>
+
+  <!--导航面包屑-->
+  <nz-breadcrumb>
+    <nz-breadcrumb-item *ngFor="let nav of navs">{{nav.name}}</nz-breadcrumb-item>
+  </nz-breadcrumb>
+</div>

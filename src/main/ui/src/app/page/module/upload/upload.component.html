@@ -1,0 +1,114 @@
+<nz-spin [nzSpinning]="loading">
+  <form nz-form [formGroup]="validateForm">
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>模块名称</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <input nz-input formControlName="name" placeholder="模块名称"/>
+        <nz-form-explain *ngIf="(validateForm.get('name')?.dirty && validateForm.get('name')?.errors)">
+          <ng-container *ngIf="validateForm.get('name')?.hasError('required')">
+            模块名称不能为空
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>Web端口</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <nz-input-number formControlName="webPort" [nzMin]="8000" [nzMax]="65535" [nzStep]="1"
+                         nzPlaceHolder="Web端口"></nz-input-number>
+        <nz-form-explain *ngIf="(validateForm.get('webPort')?.dirty && validateForm.get('webPort')?.errors)">
+          <ng-container *ngIf="validateForm.get('webPort')?.hasError('required')">
+            Web端口不能为空
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>作者</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <input nz-input formControlName="author" maxlength="15" placeholder="模块开发作者"/>
+        <nz-form-explain *ngIf="(validateForm.get('author')?.dirty && validateForm.get('name')?.errors)">
+          <ng-container *ngIf="validateForm.get('author')?.hasError('required')">
+            作者名称不能为空
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>模块类型</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <nz-select nzShowSearch nzPlaceHolder="选择状态" formControlName="type">
+          <nz-option nzLabel="系统服务" nzValue="SERVICE"></nz-option>
+          <nz-option nzLabel="应用程序" nzValue="APPLICATION"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>模块文件</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <nz-upload [(nzFileList)]="moduleFile" [nzBeforeUpload]="moduleFileBeforeUpload" [nzFilter]="moduleFileFilters"
+                   [nzRemove]="onModuleFileRemove" [nzCustomRequest]="moduleCustomReq" nzAction="/upload/up">
+          <button nz-button><i nz-icon nzType="upload"></i><span>选择模块文件</span></button>
+        </nz-upload>
+        <input nz-input formControlName="jarInfoId" class="hidden"/>
+        <nz-form-explain *ngIf="(validateForm.get('jarInfoId')?.dirty && validateForm.get('jarInfoId')?.errors)">
+          <ng-container *ngIf="validateForm.get('jarInfoId')?.hasError('required')">
+            未选择模块文件
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" [nzRequired]="'APPLICATION' == validateForm.value.type">启动图标</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <nz-upload [(nzFileList)]="moduleIconFile" [nzBeforeUpload]="moduleIconBeforeUpload"
+                   [nzShowUploadList]="true" class="avatar-uploader" nzListType="picture-card"
+                   [nzRemove]="onModuleIconRemove" [nzCustomRequest]="moduleIconCustomReq"
+                   [nzPreview]="handlePreview" style="margin-bottom:-1rem;"
+                   [nzShowButton]="moduleIconFile.length < 1" nzAction="/upload/up">
+          <i class="upload-icon" nz-icon [nzType]="loading ? 'loading' : 'plus'"></i>
+        </nz-upload>
+        <input nz-input formControlName="iconInfoId" class="hidden"/>
+        <nz-form-explain *ngIf="(validateForm.get('iconInfoId')?.dirty && validateForm.get('iconInfoId')?.errors)">
+          <ng-container *ngIf="validateForm.get('iconInfoId')?.hasError('required')">
+            应用程序必须指定启动图标
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>功能描述</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+      <textarea nz-input formControlName="note" [nzAutosize]="{ minRows:5, maxRows:15}"
+                placeholder="简单描述模块实现的功能"></textarea>
+        <nz-form-explain *ngIf="(validateForm.get('author')?.dirty && validateForm.get('author')?.errors)">
+          <ng-container *ngIf="validateForm.get('author')?.hasError('required')">
+            功能描述不能为空
+          </ng-container>
+        </nz-form-explain>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item nz-row>
+      <nz-form-control [nzSpan]="14" [nzOffset]="6">
+        <button nz-button nzType="primary" (click)="submit()">上传并提交</button>
+      </nz-form-control>
+    </nz-form-item>
+
+  </form>
+</nz-spin>
+
+
+<nz-modal [nzVisible]="previewVisible" [nzContent]="modalContent" [nzFooter]="null"
+          (nzOnCancel)="previewVisible = false">
+  <ng-template #modalContent>
+    <img [src]="previewImage" [ngStyle]="{ width: '100%' }"/>
+  </ng-template>
+</nz-modal>

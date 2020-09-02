@@ -1,0 +1,226 @@
+<nz-layout class="container flex-v">
+  <!--应用列表和窗口-->
+  <nz-content class="flex-1 overflow-hidden" (click)="active=null">
+
+    <!--应用列表-->
+    <div class="icons">
+      <div class="icon" *ngFor="let app of apps" [class.active]="active==app"
+           (click)="activeApp(app);$event.stopPropagation()" (dblclick)="openApp(app);$event.stopPropagation()">
+        <img *ngIf="app.iconInfo" src="/upload/img/{{app.iconInfo.id}}" class="app-icon" alt="">
+        <div class="text">{{app.name}}</div>
+      </div>
+    </div>
+
+    <!--已打开窗口-->
+    <app-window
+      *ngFor="let app of openedApps"
+      [data]="app"
+      [onChangedStatus]="onChangedStatus"></app-window>
+  </nz-content>
+
+  <!--任务栏-->
+  <div class="task-box" #taskBox>
+    <div class="tasks">
+
+      <i nz-icon nzType="appstore" nzTheme="outline" class="task settings"
+         nz-dropdown [nzDropdownMenu]="menu" nzPlacement="topLeft"></i>
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu nzTheme="dark">
+          <li nz-menu-item routerLink="/dashboard"><i nz-icon nzType="setting" nzTheme="outline"></i> 系统管理</li>
+          <li nz-menu-item><i nz-icon nzType="logout" nzTheme="outline"></i> 退出</li>
+        </ul>
+      </nz-dropdown-menu>
+
+      <div class="task" *ngFor="let app of openedApps">
+        <img src="/upload/img/{{app.iconInfo.id}}" (click)="minOrRestoreWin(app)"
+             nzTooltipTitle="{{app.name}}" nzTooltipPlacement="topCenter" nz-tooltip/>
+      </div>
+    </div>
+  </div>
+</nz-layout>
+
+<div class="locker-modal" *ngIf="!isLogin">
+  <div class="mask"></div>
+
+  <!--登录-->
+  <div class="form" *ngIf="'LOGIN' === formModel">
+    <nz-spin nzTip="Loading..." [nzSpinning]="loading">
+      <div nz-form [formGroup]="loginForm" class="login-form">
+        <nz-form-item>
+          <nz-form-control nzErrorTip="请输入登录用户名!">
+            <nz-input-group nzPrefixIcon="user">
+              <input type="text" nz-input formControlName="username" placeholder="用户名或邮箱"/>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control nzErrorTip="请输入密码!">
+            <nz-input-group nzPrefixIcon="lock">
+              <input type="password" nz-input formControlName="password" placeholder="登录密码" (keydown.enter)="login()"/>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control>
+            <div>
+              <label nz-checkbox formControlName="remember">
+                <span class="color-white">记住用户名</span>
+              </label>
+              <nz-divider nzType="vertical" style="margin-left:0;"></nz-divider>
+              <a (click)="formModel='FORGET_PASSWORD'">忘记密码?</a>
+            </div>
+            <div class="flex-h">
+              <button nz-button nzType="primary" (click)="login()">登录</button>
+              <span class="flex-1"></span>
+              <a (click)="setFormModel('REGISTER')">
+                没有账户 <i nz-icon nzType="swap-right" nzTheme="outline"></i>
+              </a>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </nz-spin>
+  </div>
+
+  <!--找回&重置密码-->
+  <div class="form" *ngIf="'FORGET_PASSWORD' === formModel">
+    <nz-spin nzTip="Loading..." [nzSpinning]="loading">
+      <div nz-form [formGroup]="forgetPwdForm" class="login-form">
+        <nz-form-item>
+          <nz-form-control [nzErrorTip]="forgetUserErrorTpl">
+            <nz-input-group nzPrefixIcon="user">
+              <input type="text" nz-input formControlName="username" placeholder="用户名或邮箱"/>
+              <ng-template #forgetUserErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">用户名不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('email')">邮箱格式无效!</ng-container>
+                <ng-container *ngIf="control.hasError('invalid')">仅支持5~12位字母数字下划线, 不能以数字开头!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-control [nzErrorTip]="emailCodeErrorTpl">
+            <nz-input-group nzPrefixIcon="code-sandbox">
+              <input nz-input formControlName="emailCode" placeholder="验证码"/>
+              <ng-template #emailCodeErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">邮箱验证码不能为空!</ng-container>
+              </ng-template>
+              <button nz-button nzType="primary" nzSearch class="resend-code"
+                      [class.disabled]="emailSenderTimer" (click)="sendResetEmailCode()">
+                <span *ngIf="emailSenderTimer">{{emailSenderTimer}}</span>
+                <i class="fa fa-paper-plane" *ngIf="!emailSenderTimer"></i>
+              </button>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-control nzHasFeedback [nzErrorTip]="resetPwdErrorTpl">
+            <nz-input-group nzPrefixIcon="lock">
+              <input nz-input formControlName="password" type="password" placeholder="新密码"/>
+              <ng-template #resetPwdErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">密码不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('password')">密码格式无效!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-control>
+            <div class="flex-h">
+              <a (click)="setFormModel('LOGIN')"><i nz-icon nzType="swap-left" nzTheme="outline"></i> 返回登录</a>
+              <div class="flex-1 text-center">
+                <button nz-button nzType="primary" (click)="resetPwd()">重置密码</button>
+              </div>
+              <a (click)="setFormModel('REGISTER')">没有账户 <i nz-icon nzType="swap-right" nzTheme="outline"></i></a>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </nz-spin>
+  </div>
+
+  <!--注册-->
+  <div class="form" *ngIf="'REGISTER' === formModel">
+    <nz-spin nzTip="Loading..." [nzSpinning]="loading">
+      <div nz-form [formGroup]="regForm">
+        <nz-form-item>
+          <nz-form-control nzHasFeedback [nzErrorTip]="userErrorTpl">
+            <nz-input-group nzPrefixIcon="user">
+              <input type="text" nz-input formControlName="username" placeholder="登录用户名" maxlength="12" minlength="5"/>
+              <ng-template #userErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">用户名不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('duplicated')">用户名已存在!</ng-container>
+                <ng-container *ngIf="control.hasError('invalid')">仅支持5~12位字母数字下划线, 不能以数字开头!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control nzHasFeedback nzValidatingTip="邮箱验证中..." [nzErrorTip]="emailErrorTpl">
+            <nz-input-group nzPrefixIcon="mail">
+              <input nz-input formControlName="email" placeholder="邮箱" type="email"/>
+              <ng-template #emailErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('email')">邮箱格式无效!</ng-container>
+                <ng-container *ngIf="control.hasError('required')">邮箱不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('duplicated')">邮箱已存在!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control [nzErrorTip]="emailCodeErrorTpl">
+            <nz-input-group nzPrefixIcon="code-sandbox">
+              <input nz-input formControlName="emailCode" placeholder="验证码"/>
+              <ng-template #emailCodeErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">邮箱验证码不能为空!</ng-container>
+              </ng-template>
+              <button nz-button nzType="primary" nzSearch class="resend-code"
+                      [class.disabled]="emailSenderTimer" (click)="sendRegEmailCode()">
+                <span *ngIf="emailSenderTimer">{{emailSenderTimer}}</span>
+                <i class="fa fa-paper-plane" *ngIf="!emailSenderTimer"></i>
+              </button>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control nzHasFeedback [nzErrorTip]="passwordErrorTpl">
+            <nz-input-group nzPrefixIcon="lock">
+              <input nz-input formControlName="password" type="password"
+                     placeholder="密码" (ngModelChange)="validConfirmPwd()"/>
+              <ng-template #passwordErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">密码不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('password')">密码格式无效!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control nzHasFeedback [nzErrorTip]="cfmPasswordErrorTpl">
+            <nz-input-group nzPrefixIcon="lock">
+              <input nz-input formControlName="confirmPwd" type="password" placeholder="确认密码"/>
+              <ng-template #cfmPasswordErrorTpl let-control>
+                <ng-container *ngIf="control.hasError('required')">确认密码不能为空!</ng-container>
+                <ng-container *ngIf="control.hasError('confirm')">两次密码不一致!</ng-container>
+              </ng-template>
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control>
+            <div class="flex-h">
+              <a (click)="setFormModel('LOGIN')"><i nz-icon nzType="swap-left" nzTheme="outline"></i> 返回登录</a>
+              <span class="flex-1"></span>
+              <button [class.disabled]="asyncValid.username || asyncValid.email" nz-button nzType="primary" (click)="reg()">
+                注册
+              </button>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </nz-spin>
+  </div>
+
+</div>

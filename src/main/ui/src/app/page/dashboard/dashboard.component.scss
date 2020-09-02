@@ -1,0 +1,15 @@
+nz-layout {
+  height: 100%;
+  display: flex;
+
+  nz-content {
+    flex: 1;
+    background: #fff;
+    overflow: auto;
+    padding: 1rem;
+  }
+
+  nz-footer {
+    text-align: center;
+  }
+}

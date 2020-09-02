@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--<a href="" id="a">点我跳转</a>-->
+
+<script>
+    var appUrl = location.search.substring(1);
+    var port = "", uri = "", user = "";
+    appUrl.split("&").forEach(function (v) {
+        var sp = v.split("=");
+        switch (sp[0]) {
+            case "port":
+                port = sp[1];
+                break;
+            case "uri":
+                uri = sp[1];
+                break;
+            case "user":
+                user = sp[1];
+                break;
+        }
+    });
+    var url = location.protocol + "//" + location.hostname + ":" + port + "/" + uri;
+    var param = "_=" + Math.random();
+    param += "&user=" + user;
+
+    url += "?" + param;
+    console.log('appUrl = ', appUrl);
+    location.href = url;
+
+    // var a = document.createElement('a');
+    // var a = $('#aa');
+    // a.href = url;
+    // a.click();
+</script>
+</html>
